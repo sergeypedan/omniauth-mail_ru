@@ -1,33 +1,28 @@
+require "pry"
 require "omniauth/strategies/oauth2"
-# require "openssl"
-# require "rack/utils"
-# require "uri"
+
+require_relative "../user_info_fetcher"
 
 module OmniAuth
   module Strategies
 
     # @example Basic Usage
-    #     use OmniAuth::Strategies::MailRu, 'API Key', 'Secret Key'
+    #   use OmniAuth::Strategies::MailRu, "API Key", "Secret Key"
     #
     class MailRu < OmniAuth::Strategies::OAuth2
       class NoAuthorizationCodeError < StandardError; end
 
-      DEFAULT_SCOPE = ""
+      DEFAULT_SCOPE = "email"
 
 
       ## Options
-
-      # option :access_token_options, {
-      #   header_format: "OAuth %s",
-      #   param_name:    "access_token"
-      # }
 
       option :authorize_options, [:scope, :display, :auth_type]
 
       option :client_options, {
         authorize_url: "https://connect.mail.ru/oauth/authorize",
-        site:          "https://connect.mail.ru",
-        token_url:     "oauth/token"
+        site:          "https://connect.mail.ru", # used to request token as "THIS/oauth/token"
+        token_url:     "oauth/token"              # URL is built in OAuth2::Client#token_url
       }
 
       option :info_fields, nil
@@ -40,36 +35,29 @@ module OmniAuth
       ## Auth hash accessors
 
       info do
-        prune!({
-          "nickname"    => raw_info["username"],
-          "email"       => raw_info["email"],
-          "name"        => raw_info["name"],
-          "first_name"  => raw_info["first_name"],
-          "last_name"   => raw_info["last_name"],
-          "description" => raw_info["bio"],
-          "urls" => {
-            "MailRu"  => raw_info["link"],
-            "Website" => raw_info["website"]
-          },
-          "location" => (raw_info["location"] || {})["name"],
-          "verified" => raw_info["verified"]
-        })
+        {
+          "birthday"   => raw_info["birthday"],
+          "email"      => raw_info["email"],
+          "image"      => raw_info["pick"],
+          "first_name" => raw_info["first_name"],
+          "last_name"  => raw_info["last_name"],
+          "nickname"   => raw_info["nick"]
+        }
       end
 
       extra do
-        hash = {}
-        hash["raw_info"] = raw_info
-        prune! hash
+        { "raw_info" => raw_info }
       end
 
       uid do
-        raw_info["id"]
+        raw_info["uid"]
       end
 
 
       ## OAuth mehtods
 
       private def callback_phase
+        puts "In `callback_phase`, request.params: #{request.params.inspect}" if ENV['OAUTH_DEBUG'] == 'true'
         with_authorization_code! do
           super
         end
@@ -77,6 +65,7 @@ module OmniAuth
         fail!(:no_authorization_code, e)
       end
 
+      # /users/auth/mail_ru/callback"
       private def callback_url
         options[:redirect_url] || (full_host + script_name + callback_path)
       end
@@ -85,31 +74,13 @@ module OmniAuth
       ## Helper methods
 
       def raw_info
-        @raw_info ||= access_token.get("me", info_options).parsed || {}
+        maybe_json = fetch_raw_info
+        parsed     = JSON.parse(maybe_json) rescue nil
+        return {} unless parsed
+        return {} unless parsed.is_a? Array
+        return {} unless parsed.first
+        parsed.first.sort.to_h
       end
-
-      def info_options
-        # fields = %w[nickname screen_name sex city country online bdate photo_50 photo_100 photo_200 photo_200_orig photo_400_orig]
-        # fields.concat(options[:info_fields].split(',')) if options[:info_fields]
-        # fields.join(',')
-        {
-          params: {
-            fields: (options[:info_fields] || "name,email"),
-            locale: options[:locale]
-          }
-        }
-      end
-
-      private def prune!(hash)
-        hash.delete_if do |_, value|
-          prune!(value) if value.is_a?(Hash)
-          value.nil? || (value.respond_to?(:empty?) && value.empty?)
-        end
-      end
-
-      # def access_token_options
-      #   options.access_token_options.inject({}) { |h,(k,v)| h[k.to_sym] = v; h }
-      # end
 
       # You can pass +display+, +scope+, or +auth_type+ params to the auth request, if you need to set them dynamically.
       # You can also set these options in the OmniAuth config :authorize_params option.
@@ -120,32 +91,34 @@ module OmniAuth
             next unless request.params[v]
             params[v.to_sym] = request.params[v]
 
-            session['omniauth.state'] = params[:state] if v == 'state'
-            # to support omniauth-oauth2's auto csrf protection
+            session["omniauth.state"] = params[:state] if v == "state"
+            # to support omniauth-oauth2’s auto csrf protection
           end
 
           params[:scope] ||= DEFAULT_SCOPE
         end
       end
 
-      protected
-
-      # def build_access_token
-      #   super.tap do |token|
-      #     token.options.merge!(access_token_options)
-      #   end
-      # end
 
       private
 
-      def with_authorization_code!
-        yield if request.params.has_key? "code"
-        raise NoAuthorizationCodeError, "must contain `code` URI param"
+      def fetch_raw_info
+        @raw_info_json ||=  begin
+          UserInfoFetcher.new(access_token: credentials["token"], app_id: client.id, secret_key: client.secret).call
+        rescue UserInfoFetcher::FetchError => error
+          fail!(:bad_request, error)
+          ""
+        end
       end
 
-      def appsecret_proof
-        @appsecret_proof ||= OpenSSL::HMAC.hexdigest(OpenSSL::Digest::SHA256.new, client.secret, access_token.token)
+      def with_authorization_code!
+        if request.params.has_key? "code"
+          yield
+        else
+          raise NoAuthorizationCodeError, "должен содержать URI-параметр `code`"
+        end
       end
+
     end
   end
 end

@@ -1,0 +1,61 @@
+[
+  {
+    "age": 37,
+    "app_count": {
+      "web": 0,
+      "mob_web": 0
+    },
+    "app_installed": 1,
+    "avatar_thread_id": "b106752ab106752a0100000003000000",
+    "birthday": "25.04.1983",
+    "email": "sergey_pedan@mail.ru",
+    "first_name": "Сергей",
+    "follower": 0,
+    "following": 0,
+    "friends_count": 0,
+    "has_my": 1,
+    "has_pic": 1,
+    "is_friend": 0,
+    "is_online": 1,
+    "is_verified": 1,
+    "last_name": "Педан",
+    "last_visit": 1589542261,
+    "link": "https://my.mail.ru/mail/sergey_pedan/",
+    "location": {
+      "country": {
+        "name": "Россия",
+        "id": "24"
+      },
+      "city": {
+        "name": "Москва",
+        "id": "25"
+      },
+      "region": {
+        "name": "Москва",
+        "id": "999999"
+      }
+    },
+    "nick": "Сергей Педан",
+    "pic": "https://avt-26.foto.mail.ru/mail/sergey_pedan/_avatar?1400531696",
+    "pic_128": "https://avt-7.foto.mail.ru/mail/sergey_pedan/_avatar128?1400531696",
+    "pic_180": "https://avt-9.foto.mail.ru/mail/sergey_pedan/_avatar180?1400531696",
+    "pic_190": "https://avt-24.foto.mail.ru/mail/sergey_pedan/_avatar190?1400531696",
+    "pic_22": "https://avt-20.foto.mail.ru/mail/sergey_pedan/_avatar22?1400531696",
+    "pic_32": "https://avt-23.foto.mail.ru/mail/sergey_pedan/_avatar32?1400531696",
+    "pic_40": "https://avt-10.foto.mail.ru/mail/sergey_pedan/_avatar40?1400531696",
+    "pic_50": "https://avt-27.foto.mail.ru/mail/sergey_pedan/_avatar50?1400531696",
+    "pic_big": "https://avt-2.foto.mail.ru/mail/sergey_pedan/_avatarbig?1400531696",
+    "pic_filed": "",
+    "pic_hires_filed": "",
+    "pic_id": "1",
+    "pic_small": "https://avt-17.foto.mail.ru/mail/sergey_pedan/_avatarsmall?1400531696",
+    "referer_id": "",
+    "referer_type": "authorize_code",
+    "sex": 0,
+    "show_age": 1,
+    "status_text": "",
+    "uid": "12900285598278158001",
+    "video_count": 0,
+    "vip": 0
+  }
+]
