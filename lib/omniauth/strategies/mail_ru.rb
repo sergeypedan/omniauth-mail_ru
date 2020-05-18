@@ -1,4 +1,3 @@
-require "pry"
 require "omniauth/strategies/oauth2"
 
 require_relative "../user_info_fetcher"
